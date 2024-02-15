@@ -10,8 +10,6 @@ This project implements an AI-powered chat interface using Flask, Google Cloud A
 ## Features
 
 - Send messages to an AI and receive responses in real-time.
-- Regenerate the last prompt to explore different responses.
-- Edit the last prompt for corrections or clarifications.
 - Markdown support for text formatting in the chat interface.
 - Chat history saved in a JSON file with a unique name at the end of each session.
 
