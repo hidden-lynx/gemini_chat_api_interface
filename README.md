@@ -1,6 +1,6 @@
 Below is a README.md template for your project. It includes instructions on navigating to the Google Cloud Console to retrieve the `application_default_credentials.json` file, which is necessary for authenticating your application with Google Cloud services.
 
-```markdown
+
 # AI Chat Interface
 
 ## Project Overview
