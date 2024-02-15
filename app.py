@@ -1,14 +1,32 @@
 from flask import Flask, render_template, request, jsonify
 from google.oauth2 import service_account
 from google.cloud import aiplatform
-from google.generativeai.types import safety_types
 import vertexai
 from vertexai.preview.generative_models import GenerativeModel, ChatSession
+import json
+import os
+from datetime import datetime
 
 app = Flask(__name__)
 
 # Initialize the AI chat session
 chat_history = []
+
+# Your existing init_chat and other functions here...
+
+@app.route('/end_chat', methods=['POST'])
+def end_chat():
+    global chat_history
+    if chat_history:
+        filename = f"chat_history_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.json"
+        os.makedirs('chat_histories', exist_ok=True)
+        with open(os.path.join('chat_histories', filename), 'w') as file:
+            json.dump(chat_history, file, indent=4)
+        chat_history = []  # Clear history after saving
+        return jsonify({'message': 'Chat history saved successfully.', 'filename': filename})
+    else:
+        return jsonify({'message': 'No chat history to save.'})
+
 
 def init_chat():
     #Replace with your project_id
@@ -19,10 +37,10 @@ def init_chat():
     vertexai.init(project=project_id, location=location)
     # safety_setting. Second number is block. 1 - high block, 4 - none
     safety_setting = {
-        1:1,
-        2:1,
-        3:1,
-        4:1,
+        1:4,
+        2:4,
+        3:4,
+        4:4,
     }
     model = GenerativeModel("gemini-pro", safety_settings=safety_setting)
     chat = model.start_chat()
@@ -36,9 +54,19 @@ def index():
 
 @app.route('/send_message', methods=['POST'])
 def send_message():
+    global chat_history
     user_message = request.json['message']
+
+    # Record the user's message
+    chat_history.append({'user': user_message})
+
     response = get_chat_response(chat_session, user_message)
+
+    # Record the AI's response
+    chat_history.append({'ai': response})
+
     return jsonify({'response': response})
+
 
 def get_chat_response(chat: ChatSession, prompt: str) -> str:
     responses = chat.send_message(prompt, stream=True)

@@ -63,6 +63,25 @@
                 console.log("Chat history saved in:", data.filename);
             }
         }
+
+        async function endChat() {
+    // Send a request to the Flask server to end the chat and save history
+    const response = await fetch('/end_chat', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    });
+    const data = await response.json();
+
+    // Notify the user
+    alert(data.message);
+    if (data.filename) {
+        console.log("Chat history saved in:", data.filename);
+        // Optionally, clear the chat log in the UI
+        document.getElementById("chat-log").innerHTML = "";
+    }
+}
     </script>
 </body>
 </html>
