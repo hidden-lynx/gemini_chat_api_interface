@@ -10,25 +10,12 @@ from datetime import datetime
 app = Flask(__name__)
 
 # Initialize the AI chat session
-chat_history = []
 
 # Your existing init_chat and other functions here...
 
-@app.route('/end_chat', methods=['POST'])
-def end_chat():
-    global chat_history
-    if chat_history:
-        filename = f"chat_history_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.json"
-        os.makedirs('chat_histories', exist_ok=True)
-        with open(os.path.join('chat_histories', filename), 'w') as file:
-            json.dump(chat_history, file, indent=4)
-        chat_history = []  # Clear history after saving
-        return jsonify({'message': 'Chat history saved successfully.', 'filename': filename})
-    else:
-        return jsonify({'message': 'No chat history to save.'})
-
 
 def init_chat():
+    global chat
     #Replace with your project_id
     project_id = "snappy-vim-149510"
     location = "us-central1"
@@ -42,7 +29,7 @@ def init_chat():
         3:4,
         4:4,
     }
-    model = GenerativeModel("gemini-pro", safety_settings=safety_setting)
+    model = GenerativeModel("gemini-1.0-pro", safety_settings=safety_setting)
     chat = model.start_chat()
     return chat
 
@@ -52,18 +39,32 @@ chat_session = init_chat()
 def index():
     return render_template('index.html')
 
+@app.route('/end_chat', methods=['POST'])
+def end_chat():
+    global chat
+
+    # Convert chat.history to a string representation
+    history_str = repr(chat.history)
+
+    filename = f"chat_history_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.txt"
+    os.makedirs('chat_histories', exist_ok=True)
+    with open(os.path.join('chat_histories', filename), 'w') as file:
+        file.write(history_str)
+    return jsonify({'message': 'Chat history saved successfully.', 'filename': filename})
+
+### Need to be rewrited: https://ai.google.dev/api/python/google/generativeai/GenerativeModel#multi-turn
 @app.route('/send_message', methods=['POST'])
 def send_message():
-    global chat_history
+
     user_message = request.json['message']
 
     # Record the user's message
-    chat_history.append({'user': user_message})
+
 
     response = get_chat_response(chat_session, user_message)
 
     # Record the AI's response
-    chat_history.append({'ai': response})
+
 
     return jsonify({'response': response})
 
